@@ -7,14 +7,14 @@ interface UploadProps {
     onComplete?: (base64Data: string) => void;
 }
 
-const Upload = ({onComplete}: UploadProps) => {
-    const[file, setFile] = useState<File | null>(null)
-    const [isDragging, setIsDragging] = useState(false)
-    const [progress, setProgress] = useState(0)
+const Upload = ({ onComplete }: UploadProps) => {
+    const [file, setFile] = useState<File | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [progress, setProgress] = useState(0);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    const { isSignedIn } = useOutletContext<AuthContext>()
+    const { isSignedIn } = useOutletContext<AuthContext>();
 
     useEffect(() => {
         return () => {
@@ -39,7 +39,7 @@ const Upload = ({onComplete}: UploadProps) => {
         reader.onerror = () => {
             setFile(null);
             setProgress(0);
-        }
+        };
         reader.onloadend = () => {
             const base64Data = reader.result as string;
 
@@ -62,7 +62,7 @@ const Upload = ({onComplete}: UploadProps) => {
             }, PROGRESS_INTERVAL_MS);
         };
         reader.readAsDataURL(file);
-    },[isSignedIn, onComplete]);
+    }, [isSignedIn, onComplete]);
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -108,7 +108,7 @@ const Upload = ({onComplete}: UploadProps) => {
                     <input
                         type="file"
                         className="drop-input"
-                        accept=".jpg,.jpeg,.png"
+                        accept=".jpg,.jpeg,.png,.webp"
                         disabled={!isSignedIn}
                         onChange={handleChange}
                     />
