@@ -6,6 +6,7 @@ import Upload from "../../components/Upload";
 import {useNavigate} from "react-router";
 import {useEffect, useRef, useState} from "react";
 import {createProject, getProjects} from "../../lib/puter.action";
+import { Link } from "react-router";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -124,7 +125,7 @@ export default function Home() {
 
             <div className="projects-grid">
               {projects.map(({id, name, renderedImage, sourceImage, timestamp}) => (
-                  <div key={id} className="project-card group" onClick={() => navigate(`/visualizer/${id}`)}>
+                  <link key={id} className="project-card group" onClick={() => navigate(`/visualizer/${id}`)}>
                     <div className="preview">
                       <img  src={renderedImage || sourceImage} alt="Project"
                       />
@@ -148,7 +149,7 @@ export default function Home() {
                         <ArrowUpRight size={18} />
                       </div>
                     </div>
-                  </div>
+                  </link>
               ))}
             </div>
           </div>
