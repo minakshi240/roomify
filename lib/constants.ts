@@ -1,6 +1,5 @@
 export const PUTER_WORKER_URL = import.meta.env.VITE_PUTER_WORKER_URL || "";
 
-
 // Storage Paths
 export const STORAGE_PATHS = {
     ROOT: "roomify",
@@ -46,7 +45,6 @@ FURNITURE & ROOM MAPPING (only where icons/fixtures are clearly shown):
 - Dining table icon → table with chairs.
 - Kitchen icon → counters with sink and stove.
 - Bathroom icon → toilet, sink, and tub/shower.
-
 - Office/study icon → desk, chair, and minimal shelving.
 - Porch/patio/balcony icon → outdoor seating or simple furniture (keep minimal).
 - Utility/laundry icon → washer/dryer and minimal cabinetry.

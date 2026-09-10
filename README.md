@@ -24,6 +24,16 @@ Install the dependencies:
 npm install
 ```
 
+### Environment variables
+
+Copy the example env file to create your local settings:
+
+```bash
+cp .env.example .env.local
+```
+
+Then set `VITE_PUTER_WORKER_URL` to your own Puter worker URL. The file `.env.local` is gitignored so secrets are not tracked in the repository.
+
 ### Development
 
 Start the development server with HMR:
