@@ -2,7 +2,33 @@ import puter from "@heyputer/puter.js";
 import {getOrCreateHostingConfig, uploadImageToHosting} from "./puter.hosting";
 import {isHostedUrl} from "./utils";
 import {PUTER_WORKER_URL} from "./constants";
-import {data} from "react-router";
+
+const LOCAL_PROJECTS_KEY = "roomify_projects";
+
+const getLocalProjects = (): DesignItem[] => {
+    if (typeof window === "undefined") return [];
+
+    try {
+        const stored = window.localStorage.getItem(LOCAL_PROJECTS_KEY);
+        const projects = stored ? JSON.parse(stored) : [];
+        return Array.isArray(projects) ? projects : [];
+    } catch (error) {
+        console.warn("Failed to read local projects", error);
+        return [];
+    }
+};
+
+const saveLocalProject = (item: DesignItem): DesignItem => {
+    const projects = [item, ...getLocalProjects().filter((project) => project.id !== item.id)];
+
+    try {
+        window.localStorage.setItem(LOCAL_PROJECTS_KEY, JSON.stringify(projects));
+    } catch (error) {
+        console.warn("Project could not be persisted locally", error);
+    }
+
+    return item;
+};
 
 export const signIn = async () => await puter.auth.signIn();
 
@@ -16,34 +42,36 @@ export const getCurrentUser = async () => {
     }
 }
 
-export const createProject = async ({item, visibility = "private"} : CreateProjectParams): Promise<DesignItem | null> => {
+export const createProject = async ({ item, visibility = "private" }: CreateProjectParams): Promise<DesignItem | null | undefined> => {
     if(!PUTER_WORKER_URL) {
-        console.warn('Missing VITE_PUTER_WORKER_URL; skip history fetch;');
-        return null
+        console.warn('Missing VITE_PUTER_WORKER_URL; using local project storage.');
+        return saveLocalProject(item);
     }
+    const projectId = item.id;
 
-    const projectId = item.id
+    const hosting = await getOrCreateHostingConfig();
 
-    const hosting = await getOrCreateHostingConfig()
-
-    const hostedSource = await projectId ?
+    const hostedSource = projectId ?
         await uploadImageToHosting({ hosting, url: item.sourceImage, projectId, label: 'source', }) : null;
 
     const hostedRender = projectId && item.renderedImage ?
         await uploadImageToHosting({ hosting, url: item.renderedImage, projectId, label: 'rendered', }) : null;
 
-    const resolvedSource = hostedSource?.url || (isHostedUrl(item.sourceImage) ? item.sourceImage : '');
+    const resolvedSource = hostedSource?.url || (isHostedUrl(item.sourceImage)
+        ? item.sourceImage
+        : ''
+    );
 
-    if (!resolvedSource) {
+    if(!resolvedSource) {
         console.warn('Failed to host source image, skipping save.')
-        return null
+        return null;
     }
 
     const resolvedRender = hostedRender?.url
-        ? hostedRender.url
+        ? hostedRender?.url
         : item.renderedImage && isHostedUrl(item.renderedImage)
             ? item.renderedImage
-            : undefined
+            : undefined;
 
     const {
         sourcePath: _sourcePath,
@@ -56,11 +84,9 @@ export const createProject = async ({item, visibility = "private"} : CreateProje
         ...rest,
         sourceImage: resolvedSource,
         renderedImage: resolvedRender,
-        isPublic: visibility === 'public',
     }
 
     try {
-        // call the puter worker to store project in kv
         const response = await puter.workers.exec(`${PUTER_WORKER_URL}/api/projects/save`, {
             method: 'POST',
             body: JSON.stringify({
@@ -79,15 +105,14 @@ export const createProject = async ({item, visibility = "private"} : CreateProje
         return data?.project ?? null;
     } catch (e) {
         console.log('Failed to save project', e)
-        return null
+        return null;
     }
 }
 
-
 export const getProjects = async () => {
     if(!PUTER_WORKER_URL) {
-        console.warn('Missing VITE_PUTER_WORKER_URL; skip history fetch;');
-        return []
+        console.warn('Missing VITE_PUTER_WORKER_URL; loading local project storage.');
+        return getLocalProjects();
     }
 
     try {
@@ -109,8 +134,8 @@ export const getProjects = async () => {
 
 export const getProjectById = async ({ id }: { id: string }) => {
     if (!PUTER_WORKER_URL) {
-        console.warn("Missing VITE_PUTER_WORKER_URL; skipping project fetch.");
-        return null;
+        console.warn("Missing VITE_PUTER_WORKER_URL; loading local project storage.");
+        return getLocalProjects().find((project) => project.id === id) ?? null;
     }
 
     console.log("Fetching project with ID:", id);
@@ -140,4 +165,3 @@ export const getProjectById = async ({ id }: { id: string }) => {
         return null;
     }
 };
-
